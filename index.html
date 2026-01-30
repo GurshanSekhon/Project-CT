@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Employee Management System</title>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#f6d9cf;
+  margin:0;
+}
+.container{
+  width:400px;
+  margin:80px auto;
+  background:#fff;
+  padding:25px;
+  border-radius:8px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+h2,h3{text-align:center;}
+input,select{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+}
+button{
+  padding:12px;
+  width:100%;
+  border:none;
+  background:#ff914d;
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+  border-radius:4px;
+}
+button:hover{background:#ff7a26;}
+.link{text-align:right;font-size:14px;}
+.link span{color:#ff6a1a;cursor:pointer;}
+
+.dashboard{
+  display:none;
+  width:95%;
+  margin:30px auto;
+}
+.top-bar{
+  display:flex;
+  gap:10px;
+  margin:20px 0;
+  justify-content:center;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
+th,td{
+  border:1px solid #ddd;
+  padding:10px;
+  text-align:center;
+}
+th{background:#f2f2f2;}
+
+#addEmpBox{
+  width:55%;
+  margin:15px auto;
+}
+
+.details-card{
+  display:none;
+  width:320px;
+  margin:80px auto;
+  background:#fff;
+  padding:20px;
+  text-align:center;
+  border-radius:8px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+.profile-icon{
+  width:70px;
+  height:70px;
+  margin:15px auto;
+  border-radius:50%;
+  background:#e0e0e0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:36px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="container" id="loginBox">
+  <h2>Login</h2>
+  <input id="loginUser" placeholder="Username">
+  <input id="loginPass" type="password" placeholder="Password">
+  <div class="link">don't have account? <span onclick="showRegister()">register me</span></div>
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- REGISTER -->
+<div class="container" id="registerBox" style="display:none;">
+  <h2>Register</h2>
+  <input id="regUser" placeholder="Username">
+  <input id="regPass" type="password" placeholder="Password">
+  <input id="regCpass" type="password" placeholder="Confirm Password">
+  <button onclick="register()">Register</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+
+  <!-- ADD EMPLOYEE -->
+  <div class="container" id="addEmpBox">
+    <h3>Add New Employee</h3>
+    <input id="empName" placeholder="Name">
+    <input id="empEmail" placeholder="Email">
+    <input id="empPhone" placeholder="Phone">
+    <input id="empSalary" placeholder="Salary">
+    <select id="empDept">
+      <option>IT</option>
+      <option>Finance</option>
+      <option>HR</option>
+      <option>CSE</option>
+    </select>
+
+    <!-- SCORE AS TEXT -->
+    <select id="empScore">
+      <option>Excellent</option>
+      <option>Very Good</option>
+      <option>Good</option>
+      <option>Average</option>
+    </select>
+
+    <button onclick="addEmployee()">Submit</button>
+  </div>
+
+  <!-- FILTER & SORT -->
+  <div class="top-bar">
+    <select id="filterDept" onchange="renderTable()">
+      <option value="">Filter by Department</option>
+      <option>IT</option>
+      <option>Finance</option>
+      <option>HR</option>
+      <option>CSE</option>
+    </select>
+
+    <select id="sortSalary" onchange="renderTable()">
+      <option value="">Sort by Salary</option>
+      <option value="asc">Low to High</option>
+      <option value="desc">High to Low</option>
+    </select>
+
+    <button onclick="logout()" style="width:150px;">Logout</button>
+  </div>
+
+  <!-- TABLE -->
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Salary</th>
+        <th>Department</th>
+        <th>Score</th>
+        <th>Phone</th>
+        <th>View</th>
+      </tr>
+    </thead>
+    <tbody id="empTable"></tbody>
+  </table>
+
+</div>
+
+<!-- DETAILS -->
+<div class="details-card" id="detailsBox">
+  <div class="profile-icon">👤</div>
+  <h3 id="dName"></h3>
+  <p id="dEmail"></p>
+  <p id="dDept"></p>
+  <p id="dPhone"></p>
+  <button onclick="backToDash()">Back</button>
+</div>
+
+<script>
+let currentUser=null;
+
+let users=[
+  {username:"admin",password:"admin",role:"admin"}
+];
+
+/* CONVERTED SCORES TO TEXT */
+let employees=[
+  {name:"Gaurav Narayan Pingekar",email:"gpingekar@gmail.com",salary:50000,dept:"IT",score:"Very Good",phone:"9876543210"},
+  {name:"Sumit Chauhan",email:"sumit@gmail.com",salary:45000,dept:"Finance",score:"Good",phone:"9123456780"},
+  {name:"Rahul",email:"rahul@gmail.com",salary:40000,dept:"Finance",score:"Excellent",phone:"9988776655"}
+];
+
+function showRegister(){
+  loginBox.style.display="none";
+  registerBox.style.display="block";
+}
+
+function register(){
+  if(regPass.value!==regCpass.value){
+    alert("Passwords do not match");return;
+  }
+  users.push({username:regUser.value,password:regPass.value,role:"user"});
+  alert("Registered successfully");
+  registerBox.style.display="none";
+  loginBox.style.display="block";
+}
+
+function login(){
+  let u=users.find(x=>x.username===loginUser.value && x.password===loginPass.value);
+  if(!u){alert("Invalid credentials");return;}
+  currentUser=u;
+  loginBox.style.display="none";
+  dashboard.style.display="block";
+  if(u.role!=="admin") addEmpBox.style.display="none";
+  renderTable();
+}
+
+function renderTable(){
+  empTable.innerHTML="";
+  let dept=filterDept.value;
+  let sort=sortSalary.value;
+  let list=employees.filter(e=>!dept||e.dept===dept);
+  if(sort==="asc") list.sort((a,b)=>a.salary-b.salary);
+  if(sort==="desc") list.sort((a,b)=>b.salary-a.salary);
+
+  list.forEach(e=>{
+    empTable.innerHTML+=`
+      <tr>
+        <td>${e.name}</td>
+        <td>${e.email}</td>
+        <td>${e.salary}</td>
+        <td>${e.dept}</td>
+        <td>${e.score}</td>
+        <td>${e.phone}</td>
+        <td><button onclick="viewDetails(${employees.indexOf(e)})">View</button></td>
+      </tr>`;
+  });
+}
+
+function addEmployee(){
+  employees.push({
+    name:empName.value,
+    email:empEmail.value,
+    salary:Number(empSalary.value),
+    dept:empDept.value,
+    score:empScore.value,
+    phone:empPhone.value
+  });
+  empName.value=empEmail.value=empPhone.value=empSalary.value="";
+  renderTable();
+}
+
+function viewDetails(i){
+  dashboard.style.display="none";
+  detailsBox.style.display="block";
+  let e=employees[i];
+  dName.innerText=e.name;
+  dEmail.innerText=e.email;
+  dDept.innerText="Department: "+e.dept;
+  dPhone.innerText="Phone: "+e.phone;
+}
+
+function backToDash(){
+  detailsBox.style.display="none";
+  dashboard.style.display="block";
+}
+
+function logout(){location.reload();}
+</script>
+
+</body>
+</html>
